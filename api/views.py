@@ -13,6 +13,34 @@ class RoomView(generics.CreateAPIView):
 
 # APIView allows me to override default methods eg get, post, put. When that type of request is sent to the APIView, it'll automatically dispatch it to the correct method.
 
+# when we call GetRoom(APIView) with a get request,we need to pass a parameter in the url called code which is equal to the room that we're trying to get
+class GetRoom(APIView):
+    serializer_class = RoomSerializer
+    lookup_url_kwarg = "code"
+
+    def get(self, request, format=None):
+        # looking for "code" parameter in the url to look up room with the code.
+        code = request.GET.get(self.lookup_url_kwarg)
+        if code != None:
+            room = Room.objects.filter(code=code)
+            if len(room) > 0:
+                # data is a python dictionary extracted from the serialized room
+                data = RoomSerializer(room[0]).data
+                # host is the session key. If the user requesting the session equals the host of the room they're the host
+                data["is_host"] = self.request.session.session_key == room[0].host
+                return Response(data, status=status.HTTP_200_OK)
+
+            # if no room found:
+            return Response(
+                {"Room Not Found": "Invalid Room Code."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response(
+            {"Bad Request": "Code paramater not found in request"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
 
 class CreateRoomView(APIView):
     serializer_class = CreateRoomSerializer
@@ -34,7 +62,7 @@ class CreateRoomView(APIView):
             if queryset.exists():
                 room = queryset[0]
                 room.guest_can_pause = guest_can_pause
-                room.vote_to_skip = votes_to_skip
+                room.votes_to_skip = votes_to_skip
                 room.save(update_fields=["guest_can_pause", "votes_to_skip"])
             # If room isn't being updated
             else:

@@ -33,7 +33,7 @@ export default class CreateRoomPage extends Component {
     handleGuestCanPauseChange(e) {
         this.setState({
             // If this value is equal to the string true then make what it true otherwise make it false
-            guestCanPause: e.target.value === 'true' ? true : false
+            guestCanPause: e.target.value === 'true' ? true : false,
         });
     }
 
@@ -56,7 +56,7 @@ export default class CreateRoomPage extends Component {
         };
         // Send request to local host with request options which is going to have the payload which is my body, type post and headers of the content type. .then: once there's a response, let's take and convert that response into json and .then let's take the data and lets console log the data for now 
         fetch('/api/create-room', requestOptions).then((response) => response.json()
-        ).then((data) => console.log(data));
+        ).then((data) => this.props.history.push("/room/" + data.code));
     }
 
     render() {
@@ -77,7 +77,7 @@ export default class CreateRoomPage extends Component {
                         <FormControlLabel value='true'
                             control={<Radio color='primary' />}
                             label='Play/Pause' labelPlacement='bottom' />
-                        <FormControlLabel value='true'
+                        <FormControlLabel value='false'
                             control={<Radio color='secondary' />}
                             label='No control'
                             labelPlacement='bottom'
