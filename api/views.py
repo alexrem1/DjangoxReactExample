@@ -42,6 +42,33 @@ class GetRoom(APIView):
         )
 
 
+class JoinRoom(APIView):
+    lookup_url_kwarg = "code"
+
+    def post(self, request, format=None):
+        # Check if theres an active session
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        # .data because post request
+        code = request.data.get(self.lookup_url_kwarg)
+        if code != None:
+            room_result = Room.objects.filter(code=code)
+            if len(room_result) > 0:
+                room = room_result[0]
+                # make a note on the backend that a user is in the room
+                self.request.session["room_code"] = code
+                return Response({"message": "Room Joined!"}, status=status.HTTP_200_OK)
+
+        return Response(
+            {"Bad Request": "Invalid Room Code"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+        return Response(
+            {"Bad Request": "Invalid post data, did not find a code key"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
 class CreateRoomView(APIView):
     serializer_class = CreateRoomSerializer
 
@@ -64,6 +91,7 @@ class CreateRoomView(APIView):
                 room.guest_can_pause = guest_can_pause
                 room.votes_to_skip = votes_to_skip
                 room.save(update_fields=["guest_can_pause", "votes_to_skip"])
+                self.request.session["room_code"] = room.code
             # If room isn't being updated
             else:
                 room = Room(
@@ -72,6 +100,7 @@ class CreateRoomView(APIView):
                     votes_to_skip=votes_to_skip,
                 )
                 room.save()
+                self.request.session["room_code"] = room.code
 
             # We still want to return a response to tell whoever sent this to use wether this was valid or not. Response contains the room they created with the extra info eg time created. We need to serialize the room object we created/updated.
             return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)

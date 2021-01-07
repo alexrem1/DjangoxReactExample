@@ -48,6 +48,23 @@ export default class RoomJoinPage extends Component {
     }
 
     roomButtonPressed() {
-        console.log(this.state.roomCode)
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                code: this.state.roomCode,
+            })
+        };
+        fetch('/api/join-room', requestOptions).then((response) => {
+            // if response is ok we will redirect the user to this room code and if Notification, then error pops up
+            if (response.ok) {
+                this.props.history.push(`/room/${this.state.roomCode}`)
+            } else {
+                this.setState({ error: "Room not found." })
+            }
+            // will only happen if sending the request throws an error
+        }).catch((error) => {
+            console.log(error);
+        });
     }
 }
