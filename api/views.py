@@ -4,6 +4,7 @@ from .serializers import RoomSerializer, CreateRoomSerializer
 from .models import Room
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import JsonResponse
 
 # Create your views here.
 class RoomView(generics.CreateAPIView):
@@ -104,3 +105,13 @@ class CreateRoomView(APIView):
 
             # We still want to return a response to tell whoever sent this to use wether this was valid or not. Response contains the room they created with the extra info eg time created. We need to serialize the room object we created/updated.
             return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
+
+
+# send get request to endpoint to find if the user is in a room to get the code
+class UserInRoom(APIView):
+    def get(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        # takes a python dictionary and serializes it using a json serializer and sends it back in the request
+        data = {"code": self.request.session.get("room_code")}
+        return JsonResponse(data, status=status.HTTP_200_OK)

@@ -8,6 +8,23 @@ import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-ro
 export default class HomePage extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            roomCode: null,
+        };
+    }
+
+    // if user is already in a Room, as the homepage/app loads, I want to direct them to back to their room if they're in a room via an endpoint I can call on the server that tells me if this user is in a room or not
+    // Lifecycle mthod are ways to hook into a react component eg do something before it loads via shouldComponentUpdata
+    // calling an endpoint on a server can some time eg not on the same device, client far away hence asynchronos
+    async componentDidMount() {
+        // call api endpoint to find out if we're in a room and if we are in a room, we get the room code coming in through the field called code. Return response.json (get json from our response). Data (json object) can be parsed through for the room code
+        fetch("/api/user-in-room")
+            .then((response) => response.json())
+            .then((data) => {
+                this.setState({
+                    roomCode: data.code,
+                });
+            });
     }
 
     renderHomePage() {
@@ -35,15 +52,25 @@ export default class HomePage extends Component {
     render() {
         return (
             <Router>
-                <switch>
-                    <Route exact path='/'>{this.renderHomePage()}
-                    </Route>
+                <Switch>
+                    <Route
+                        exact
+                        path="/"
+                        render={() => {
+                            return this.state.roomCode ? (
+                                <Redirect to={`/room/${this.state.roomCode}`} />
+                            ) : (
+                                    this.renderHomePage()
+                                );
+                        }}
+                    />
                     <Route path='/join' component={RoomJoinPage} />
                     <Route path='/create' component={CreateRoomPage} />
                     {/* react router by default passes props to the room component that will have info relating to how we got there. It'll give a prop called match (how it matched the url string path) and that will give access to the params from the url. Grab room code from there. */}
                     <Route path='/room/:roomCode' component={Room} />
-                </switch>
-            </Router>);
+                </Switch>
+            </Router>
+        );
 
     }
 }
