@@ -8,10 +8,12 @@ export default class Room extends Component {
             votesToSkip: 2,
             guestCanPause: false,
             isHost: false,
+            showSettings: false,
         };
         this.roomCode = this.props.match.params.roomCode;
         this.getRoomDetails();
         this.leaveButtonPressed = this.leaveButtonPressed.bind(this);
+        this.updateShowSettings = this.updateShowSettings.bind(this);
     }
 
     // This gets the room details
@@ -45,6 +47,22 @@ export default class Room extends Component {
         });
     }
 
+    updateShowSettings(value) {
+        this.setState({
+            showSettings: value,
+        });
+    }
+
+    renderSettingsButton() {
+        return (
+            <Grid item xs={12} align="center">
+                <Button variant="contained" color="primary" onClick={() => this.updateShowSettings(true)}>
+                    Settings
+                </Button>
+            </Grid>
+        );
+    }
+
     render() {
         return (
             <Grid container spacing={1}>
@@ -68,6 +86,9 @@ export default class Room extends Component {
                         Host: {this.state.isHost.toString()}
                     </Typography>
                 </Grid>
+                {/* if user is a host we render the buttons, if it's not(:) we won't do anything. Conditional */}
+                {/* a user may somehow be able to send a patch request to update room but because the backend is secure eg checks for host, the user won't be able to do so */}
+                {this.state.isHost ? this.renderSettingsButton() : null}
                 <Grid item xs={12} align="center">
                     <Button
                         variant="contained"

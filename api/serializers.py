@@ -19,3 +19,12 @@ class CreateRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = ("guest_can_pause", "votes_to_skip")
+
+
+class UpdateRoomSerializer(serializers.ModelSerializer):
+    # if unique is true, it won't let me pass in a code that isn't unique. Code is now redfined.
+    code = serializers.CharField(validators=[])
+
+    class Meta:
+        model = Room
+        fields = ("guest_can_pause", "votes_to_skip", "code")
