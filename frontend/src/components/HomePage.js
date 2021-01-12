@@ -11,6 +11,7 @@ export default class HomePage extends Component {
         this.state = {
             roomCode: null,
         };
+        this.clearRoomCode = this.clearRoomCode.bind(this);
     }
 
     // if user is already in a Room, as the homepage/app loads, I want to direct them to back to their room if they're in a room via an endpoint I can call on the server that tells me if this user is in a room or not
@@ -49,6 +50,12 @@ export default class HomePage extends Component {
         );
     }
 
+    clearRoomCode() {
+        this.setState({
+            roomCode: null,
+        });
+    }
+
     render() {
         return (
             <Router>
@@ -67,7 +74,12 @@ export default class HomePage extends Component {
                     <Route path='/join' component={RoomJoinPage} />
                     <Route path='/create' component={CreateRoomPage} />
                     {/* react router by default passes props to the room component that will have info relating to how we got there. It'll give a prop called match (how it matched the url string path) and that will give access to the params from the url. Grab room code from there. */}
-                    <Route path='/room/:roomCode' component={Room} />
+                    <Route
+                        path="/room/:roomCode"
+                        render={(props) => {
+                            return <Room {...props} leaveRoomCallback={this.clearRoomCode} />;
+                        }}
+                    />
                 </Switch>
             </Router>
         );
