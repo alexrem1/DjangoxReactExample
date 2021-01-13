@@ -10,6 +10,7 @@ import Radio from "@material-ui/core/Radio";
 import RadioGroup from "@material-ui/core/RadioGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import { FormLabel } from '@material-ui/core';
+import { Collapse } from "@material-ui/core";
 
 export default class CreateRoomPage extends Component {
     // set the default value for the props (piece of information being passed in). If we don't pass any of these props through, by default they will have these values
@@ -27,14 +28,15 @@ export default class CreateRoomPage extends Component {
         this.state = {
             guestCanPause: this.props.guestCanPause,
             votesToSkip: this.props.votesToSkip,
+            errorMsg: "",
+            successMsg: ""
         };
 
         // binding this method to the class so that inside of this method we have access to the this keyword.
         this.handleRoomButtonPressed = this.handleRoomButtonPressed.bind(this);
-
         this.handleVotesChange = this.handleVotesChange.bind(this);
-
         this.handleGuestCanPauseChange = this.handleGuestCanPauseChange.bind(this);
+        this.handleUpdateButtonPressed = this.handleUpdateButtonPressed.bind(this);
     }
 
     handleGuestCanPauseChange(e) {
@@ -66,6 +68,31 @@ export default class CreateRoomPage extends Component {
         ).then((data) => this.props.history.push("/room/" + data.code));
     }
 
+    handleUpdateButtonPressed() {
+        const requestOptions = {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                votes_to_skip: this.state.votesToSkip,
+                guest_can_pause: this.state.guestCanPause,
+                code: this.props.roomCode,
+            }),
+        };
+        fetch('/api/update-room', requestOptions).then((response) => {
+            if (response.ok) {
+                this.setState({
+                    successMsg: "Room updated succesfully!"
+                })
+            } else {
+                this.setState({
+                    errorMsg: "Error updating room..."
+                });
+            }
+            // we do this after the fetch has finished
+            this.props.updateCallback();
+        });
+    }
+
     renderCreateButtons() {
         return (<Grid container spacing={1}>
             <Grid item xs={12} align="center">
@@ -92,7 +119,7 @@ export default class CreateRoomPage extends Component {
                 <Button
                     color="primary"
                     variant="contained"
-                    onClick={this.handleRoomButtonPressed}
+                    onClick={this.handleUpdateButtonPressed}
                 >
                     Update Room
         </Button>
@@ -106,6 +133,12 @@ export default class CreateRoomPage extends Component {
 
         return <Grid container spacing={1}>
             <Grid item xs={12} align='center'>
+                {/* if we have an error or success msg we will show the collapse, if we dont we're not going to show */}
+                <Collapse in={this.state.errorMsg != "" || this.state.successMsg != ""}>
+                    {this.state.successMsg}
+                </Collapse>
+            </Grid>
+            <Grid item xs={12} align='center'>
                 <Typography component="h4" variant="h4">
                     {title}
                 </Typography>
@@ -117,7 +150,7 @@ export default class CreateRoomPage extends Component {
                             Guest Control of Playback State
                                         </div>
                     </FormHelperText>
-                    <RadioGroup row defaultValue='true' onChange={this.handleGuestCanPauseChange}>
+                    <RadioGroup row defaultValue={this.props.guestCanPause.toString()} onChange={this.handleGuestCanPauseChange}>
                         <FormControlLabel value='true'
                             control={<Radio color='primary' />}
                             label='Play/Pause' labelPlacement='bottom' />
