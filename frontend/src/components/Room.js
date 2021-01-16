@@ -10,14 +10,16 @@ export default class Room extends Component {
             guestCanPause: false,
             isHost: false,
             showSettings: false,
+            spotifyAuthenticated: false,
         };
         this.roomCode = this.props.match.params.roomCode;
-        this.getRoomDetails();
         this.leaveButtonPressed = this.leaveButtonPressed.bind(this);
         this.updateShowSettings = this.updateShowSettings.bind(this);
         this.renderSettingsButton = this.renderSettingsButton.bind(this);
         this.renderSettings = this.renderSettings.bind(this);
         this.getRoomDetails = this.getRoomDetails.bind(this);
+        this.getRoomDetails();
+        this.authenticateSpotify = this.authenticateSpotify.bind(this);
     }
 
     // This gets the room details
@@ -36,6 +38,29 @@ export default class Room extends Component {
                     guestCanPause: data.guest_can_pause,
                     isHost: data.is_host,
                 });
+                // after the state is set, only if the user is the host
+                if (this.state.isHost) {
+                    this.authenticateSpotify();
+                }
+            })
+    }
+
+    // send a request to backend, if current user is authenticated, only if the user is host. we must wait for getRoomDetails to run before we call the below.
+    // user visits url to get authenticated, then redirect to the spotify callback which saves the token and redirects us to the frontend. Frontend redirects to the homepage
+    authenticateSpotify() {
+        fetch("/spotify/is-authenticated")
+            .then((response) => response.json())
+            .then((data) => {
+                this.setState({ spotifyAuthenticated: data.status });
+                console.log(data.status);
+                if (!data.status) {
+                    fetch("/spotify/get-auth-url")
+                        .then((response) => response.json())
+                        .then((data) => {
+                            // native javascript redirect
+                            window.location.replace(data.url);
+                        });
+                }
             });
     }
 
