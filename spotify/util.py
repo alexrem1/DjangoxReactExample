@@ -7,6 +7,7 @@ from requests import post
 # check to see if there's any tokens associated with the user
 def get_user_tokens(session_id):
     user_tokens = SpotifyToken.objects.filter(user=session_id)
+
     if user_tokens.exists():
         return user_tokens[0]
     else:
@@ -19,7 +20,7 @@ def update_or_create_user_tokens(
 ):
     tokens = get_user_tokens(session_id)
     # expires in will be numeric (3600=1hour) but we need to convert it into a timestap ie current time + an hour
-    expires_in = timezone.now() + timedelta(seconds=expires_in)
+    expires_in = timezone.now() + timedelta(seconds=3600)
 
     # if tokens we will update existing ones
     if tokens:
@@ -68,14 +69,13 @@ def refresh_spotify_token(session_id):
             "refresh_token": refresh_token,
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
-        },
+        }
     ).json()
 
     # returns new tokens
     access_token = response.get("access_token")
     token_type = response.get("token_type")
     expires_in = response.get("expires_in")
-    refresh_token = response.get("refresh_token")
 
     update_or_create_user_tokens(
         session_id, access_token, token_type, expires_in, refresh_token
